@@ -3,17 +3,166 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>하이브리드 헌터 v5.2</title>
+    <title>Hybrid Hunter v5.2</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #121212; color: #ffffff; text-align: center; padding: 20px; }
-        .container { max-width: 500px; margin: 0 auto; background: #1e1e1e; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); }
-        h1 { color: #4caf50; }
+        :root {
+            --bg-color: #0f111a;
+            --card-bg: #151824;
+            --accent-color: #00ff88;
+            --text-color: #e3e6ed;
+            --text-muted: #8a8f9e;
+            --border-color: #222738;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-color); color: var(--text-color); padding: 15px; font-size: 14px; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 10px 5px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); }
+        .header h1 { font-size: 1.4rem; color: var(--accent-color); font-weight: 700; letter-spacing: -0.5px; }
+        .status-badge { background: rgba(0, 255, 136, 0.1); color: var(--accent-color); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; border: 1px solid rgba(0, 255, 136, 0.2); }
+        .grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
+        .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: #fff; display: flex; justify-content: space-between; align-items: center; }
+        .card-title span { font-size: 0.8rem; color: var(--text-muted); }
+        .sector-tab { display: flex; gap: 8px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 5px; }
+        .tab-btn { background: #1f2336; border: none; color: var(--text-muted); padding: 6px 12px; border-radius: 6px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
+        .tab-btn.active { background: var(--accent-color); color: #000; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { color: var(--text-muted); font-size: 0.8rem; padding: 8px 4px; border-bottom: 1px solid var(--border-color); font-weight: 500; }
+        td { padding: 10px 4px; border-bottom: 1px solid #1c2030; font-size: 0.9rem; }
+        .up { color: #ff4a5a; }
+        .down { color: #3b82f6; }
+        .calc-group { display: flex; flex-direction: column; gap: 10px; margin-top: 5px; }
+        .input-row { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+        .input-row label { color: var(--text-muted); font-size: 0.85rem; }
+        input { background: #1c2030; border: 1px solid var(--border-color); color: #fff; padding: 8px; border-radius: 6px; width: 60%; text-align: right; font-size: 0.9rem; }
+        input:focus { border-color: var(--accent-color); outline: none; }
+        .btn-submit { background: #1f2336; border: 1px solid var(--border-color); color: var(--accent-color); padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .btn-submit:hover { background: rgba(0, 255, 136, 0.1); }
+        .result-box { background: #1c2030; padding: 12px; border-radius: 6px; margin-top: 10px; border-left: 3px solid var(--accent-color); display: none; }
+        .result-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.85rem; }
+        .result-row:last-child { margin-bottom: 0; font-weight: bold; font-size: 0.95rem; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>하이브리드 헌터 v5.2</h1>
-        <p>어플리케이션 시스템 준비 중입니다...</p>
+
+    <div class="header">
+        <h1>Hybrid Hunter <span style="font-weight:300; color:#fff;">v5.2</span></h1>
+        <div class="status-badge">LIVE RUNNING</div>
     </div>
+
+    <div class="grid">
+        <!-- 섹터 모니터링 카드 -->
+        <div class="card">
+            <div class="card-title">주요 섹터 모니터링 <span>Sector Tracker</span></div>
+            <div class="sector-tab">
+                <button class="tab-btn active" onclick="switchSector('semi')">반도체/HBM</button>
+                <button class="tab-btn" onclick="switchSector('heavy')">건설/중공업</button>
+                <button class="tab-btn" onclick="switchSector('ship')">해운/조선</button>
+            </div>
+            
+            <table id="stock-table">
+                <thead>
+                    <tr>
+                        <th>종목명</th>
+                        <th style="text-align: right;">현재가</th>
+                        <th style="text-align: right;">등락률</th>
+                    </tr>
+                </thead>
+                <tbody id="stock-list">
+                    <!-- 자바스크립트로 데이터 주입 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 간이 투자 분석 계산기 -->
+        <div class="card">
+            <div class="card-title">목표가 및 비중 계산기 <span>Position Calculator</span></div>
+            <div class="calc-group">
+                <div class="input-row">
+                    <label>현재 매수가 (원)</label>
+                    <input type="number" id="buy-price" placeholder="예: 50000" value="">
+                </div>
+                <div class="input-row">
+                    <label>목표가 (원)</label>
+                    <input type="number" id="target-price" placeholder="예: 75000" value="">
+                </div>
+                <div class="input-row">
+                    <label>보유 수량 (주)</label>
+                    <input type="number" id="stock-qty" placeholder="예: 100" value="">
+                </div>
+                <button class="btn-submit" onclick="calculateMetrics()">분석 실행</button>
+                
+                <div class="result-box" id="result-box">
+                    <div class="result-row"><span>총 매수금액:</span><span id="res-total-buy">-</span></div>
+                    <div class="result-row"><span>목표가 도달 시 수익률:</span><span id="res-return" class="up">-</span></div>
+                    <div class="result-row"><span>예상 총 평가금액:</span><span id="res-total-eval" style="color:#fff;">-</span></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const stockData = {
+            semi: [
+                { name: "삼성전자", price: "76,200", change: "+1.2%" },
+                { name: "한미반도체", price: "142,500", change: "+3.8%" },
+                { name: "네오셈", price: "13,240", change: "-0.5%" },
+                { name: "SFA반도체", price: "5,310", change: "+0.2%" }
+            ],
+            heavy: [
+                { name: "현대건설", price: "36,450", change: "+0.8%" },
+                { name: "HD현대중공업", price: "131,200", change: "+2.1%" },
+                { name: "삼성중공업", price: "9,150", change: "-1.1%" }
+            ],
+            ship: [
+                { name: "HMM", price: "18,420", change: "+0.5%" },
+                { name: "팬오션", price: "4,210", change: "-0.9%" },
+                { name: "대한해운", price: "2,150", change: "+1.4%" }
+            ]
+        };
+
+        function switchSector(sector) {
+            const tabs = document.querySelectorAll('.tab-btn');
+            tabs.forEach(tab => tab.classList.remove('active'));
+            event.target.classList.add('active');
+
+            const list = document.getElementById('stock-list');
+            list.innerHTML = '';
+
+            stockData[sector].forEach(stock => {
+                const isUp = stock.change.startsWith('+');
+                const changeClass = isUp ? 'up' : 'down';
+                const row = `<tr>
+                    <td><strong>${stock.name}</strong></td>
+                    <td style="text-align: right;">${stock.price}</td>
+                    <td style="text-align: right;" class="${changeClass}">${stock.change}</td>
+                </tr>`;
+                list.innerHTML += row;
+            });
+        }
+
+        function calculateMetrics() {
+            const buyPrice = parseFloat(document.getElementById('buy-price').value);
+            const targetPrice = parseFloat(document.getElementById('target-price').value);
+            const qty = parseFloat(document.getElementById('stock-qty').value);
+
+            if(!buyPrice || !targetPrice || !qty) {
+                alert('모든 칸을 정확히 입력해 주세요.');
+                return;
+            }
+
+            const totalBuy = buyPrice * qty;
+            const totalEval = targetPrice * qty;
+            const profitRate = ((targetPrice - buyPrice) / buyPrice) * 100;
+
+            document.getElementById('res-total-buy').innerText = totalBuy.toLocaleString() + " 원";
+            document.getElementById('res-total-eval').innerText = totalEval.toLocaleString() + " 원";
+            document.getElementById('res-return').innerText = "+" + profitRate.toFixed(2) + "%";
+            
+            document.getElementById('result-box').style.display = 'block';
+        }
+
+        // 초기 실행
+        switchSector('semi');
+    </script>
 </body>
 </html>
